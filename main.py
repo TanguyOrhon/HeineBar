@@ -29,21 +29,21 @@ def main():
 
     root = tk.Tk()
     root.title("Boutique avec utilisateurs")
-    root.geometry("900x500")
-    root.resizable(False, False)
+
+    # --- Maximiser la fenêtre fenêtrée ---
+    root.state('zoomed')
 
     style = ttk.Style(root)
     style.theme_use('clam')
     style.configure('TLabel', font=('Segoe UI', 11))
-    style.configure('TButton', font=('Segoe UI', 10), padding=6)
+    style.configure('TButton', font=('Segoe UI', 10), padding=6, foreground="black")
     style.configure('TEntry', font=('Segoe UI', 10))
     style.configure('Header.TLabel', font=('Segoe UI', 14, 'bold'))
 
     selected_username = tk.StringVar(value="")
     user_options = {}
 
-    # --- Fonctions ---
-
+    # --- Fonctions internes ---
     def update_article_buttons():
         for widget in scroll_frame.winfo_children():
             widget.destroy()
@@ -143,8 +143,44 @@ def main():
         else:
             messagebox.showerror("Erreur", f"Utilisateur '{name}' existe déjà.")
 
-    # --- Interface ---
+    def add_balance():
+        username = selected_username.get()
+        if not username:
+            messagebox.showwarning("Sélection requise", "Veuillez sélectionner un utilisateur.")
+            return
 
+        uid = user_options.get(username)
+        if uid is None:
+            messagebox.showerror("Erreur", "Utilisateur introuvable.")
+            return
+
+        amount_str = entry_balance.get().strip()
+        if not amount_str:
+            messagebox.showerror("Erreur", "Veuillez saisir un montant.")
+            return
+
+        try:
+            amount = float(amount_str)
+        except ValueError:
+            messagebox.showerror("Erreur", "Le montant doit être un nombre.")
+            return
+
+        if amount <= 0:
+            messagebox.showerror("Erreur", "Le montant doit être supérieur à 0.")
+            return
+
+        # Mettre à jour la balance dans la DB
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET balance = balance + ? WHERE id = ?", (amount, uid))
+        conn.commit()
+        conn.close()
+
+        entry_balance.delete(0, tk.END)
+        select_user(username)  # Met à jour l'affichage du solde
+        messagebox.showinfo("Succès", f"{amount:.2f} € ajoutés au solde de {username}.")
+
+    # --- Interface ---
     main_frame = ttk.Frame(root)
     main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
@@ -158,7 +194,6 @@ def main():
     notebook.add(frame_creation, text="Création Article & Utilisateur")
 
     # --- Widgets Achats & Utilisateur ---
-
     ttk.Label(frame_achats, text="Sélectionner un utilisateur", style='Header.TLabel').pack(anchor=tk.W)
 
     user_label = ttk.Label(frame_achats, text="Aucun utilisateur sélectionné", font=('Segoe UI', 12))
@@ -170,9 +205,17 @@ def main():
     total_label = ttk.Label(frame_achats, text="Solde : 0.00 €", font=('Segoe UI', 11, 'italic'))
     total_label.pack(anchor=tk.W, pady=(0, 15))
 
+    ttk.Label(frame_achats, text="Faire un dépot :", style='Header.TLabel').pack(anchor=tk.W, pady=(10,0))
+
+    entry_balance = ttk.Entry(frame_achats, width=20)
+    entry_balance.pack(anchor=tk.W, pady=5)
+
+    btn_add_balance = ttk.Button(frame_achats, text="Ajouter au solde", command=add_balance, width=20)
+    btn_add_balance.pack(anchor=tk.W, pady=5)
+
+
     ttk.Label(frame_achats, text="Articles disponibles :", style='Header.TLabel').pack(anchor=tk.W)
 
-    # Scrollable frame pour articles
     canvas = tk.Canvas(frame_achats, borderwidth=0, height=300)
     scroll_frame = ttk.Frame(canvas)
     vsb = ttk.Scrollbar(frame_achats, orient="vertical", command=canvas.yview)
@@ -187,18 +230,17 @@ def main():
     scroll_frame.bind("<Configure>", on_frame_configure)
 
     # --- Widgets Création Article & Utilisateur ---
-
     ttk.Label(frame_creation, text="Ajouter un article", style='Header.TLabel').pack(anchor=tk.W, pady=(0,10))
 
     ttk.Label(frame_creation, text="Nom de l'article:").pack(anchor=tk.W)
-    entry_name = ttk.Entry(frame_creation, width=30)
+    entry_name = ttk.Entry(frame_creation, width=40)
     entry_name.pack(anchor=tk.W, pady=5)
 
     ttk.Label(frame_creation, text="Prix (€):").pack(anchor=tk.W)
-    entry_price = ttk.Entry(frame_creation, width=30)
+    entry_price = ttk.Entry(frame_creation, width=40)
     entry_price.pack(anchor=tk.W, pady=5)
 
-    btn_add_article = ttk.Button(frame_creation, text="Ajouter l'article", command=add_article)
+    btn_add_article = ttk.Button(frame_creation, text="Ajouter l'article", command=add_article, width=40)
     btn_add_article.pack(anchor=tk.W, pady=10)
 
     ttk.Separator(frame_creation, orient='horizontal').pack(fill=tk.X, pady=20)
@@ -206,14 +248,14 @@ def main():
     ttk.Label(frame_creation, text="Ajouter un utilisateur", style='Header.TLabel').pack(anchor=tk.W, pady=(0,10))
 
     ttk.Label(frame_creation, text="Nom de l'utilisateur:").pack(anchor=tk.W)
-    entry_new_user = ttk.Entry(frame_creation, width=30)
+    entry_new_user = ttk.Entry(frame_creation, width=40)
     entry_new_user.pack(anchor=tk.W, pady=5)
 
     ttk.Label(frame_creation, text="Dépôt:").pack(anchor=tk.W)
-    entry_solde = ttk.Entry(frame_creation, width=30)
+    entry_solde = ttk.Entry(frame_creation, width=40)
     entry_solde.pack(anchor=tk.W, pady=5)
 
-    btn_create_user = ttk.Button(frame_creation, text="Créer utilisateur", command=create_user)
+    btn_create_user = ttk.Button(frame_creation, text="Créer utilisateur", command=create_user, width=40)
     btn_create_user.pack(anchor=tk.W, pady=10)
 
     # --- Initialisation ---
