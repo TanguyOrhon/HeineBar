@@ -64,3 +64,11 @@ def get_user_purchases(user_id):
     purchases = cursor.fetchall()
     conn.close()
     return purchases
+
+def get_total_spent_by_user(user_id):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT SUM(item_price) FROM purchases WHERE user_id = ?", (user_id,))
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result[0] is not None else 0.0
