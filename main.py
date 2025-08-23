@@ -39,7 +39,7 @@ def main():
     style.configure('TEntry', font=('Segoe UI', 10))
     style.configure('Header.TLabel', font=('Segoe UI', 14, 'bold'))
 
-    selected_user_id = tk.IntVar(value=0)
+    selected_username = tk.StringVar(value="")
     user_options = {}
 
     # --- Fonctions ---
@@ -74,18 +74,24 @@ def main():
         messagebox.showinfo("Succès", f"Article '{name}' ajouté.")
 
     def confirm_purchase(article):
-        if selected_user_id.get() == 0:
+        username = selected_username.get()
+        if not username:
             messagebox.showwarning("Sélection requise", "Veuillez sélectionner un utilisateur.")
             return
 
-        # Enregistrement de l’achat
-        add_purchase(selected_user_id.get(), article['name'], article['price'])
+        user_id = user_options.get(username)
+        if user_id is None:
+            messagebox.showerror("Erreur", "Utilisateur invalide.")
+            return
 
-        # Confirmation
+        try:
+            add_purchase(user_id, article['name'], article['price'])
+        except ValueError as e:
+            messagebox.showerror("Erreur", str(e))
+            return
+
         messagebox.showinfo("Achat confirmé", f"{article['name']} acheté pour {article['price']:.2f} €.")
-
-        # Recharger dépenses de l'utilisateur
-        select_user(selected_user_id.get())
+        select_user(username)
 
     def refresh_users():
         menu = user_menu['menu']
@@ -93,23 +99,27 @@ def main():
         users = get_users()
         user_options.clear()
         for uid, name in users:
-            user_options[uid] = name
-            menu.add_command(label=name, command=lambda v=uid: select_user(v))
+            user_options[name] = uid
+            menu.add_command(label=name, command=lambda n=name: select_user(n))
 
         if users:
-            first_user_id = users[0][0]
-            select_user(first_user_id)
+            first_user_name = users[0][1]
+            select_user(first_user_name)
         else:
-            selected_user_id.set(0)
+            selected_username.set("")
             user_label.config(text="Aucun utilisateur sélectionné")
+            total_label.config(text="Solde : 0.00 €")
 
-    def select_user(uid):
-        selected_user_id.set(uid)
-        username = user_options.get(uid, 'N/A')
+    def select_user(username):
+        selected_username.set(username)
+        uid = user_options.get(username)
+        if uid is None:
+            user_label.config(text="Utilisateur introuvable")
+            total_label.config(text="Solde : 0.00 €")
+            return
         total = get_user_balance(uid)
         user_label.config(text=f"Utilisateur sélectionné : {username}")
         total_label.config(text=f"Solde : {total:.2f} €")
-
 
     def create_user():
         name = entry_new_user.get().strip()
@@ -154,11 +164,11 @@ def main():
     user_label = ttk.Label(frame_achats, text="Aucun utilisateur sélectionné", font=('Segoe UI', 12))
     user_label.pack(anchor=tk.W, pady=(0,10))
 
-    user_menu = ttk.OptionMenu(frame_achats, selected_user_id, None)
+    user_menu = ttk.OptionMenu(frame_achats, selected_username, None)
     user_menu.pack(anchor=tk.W, pady=(0,15))
+
     total_label = ttk.Label(frame_achats, text="Solde : 0.00 €", font=('Segoe UI', 11, 'italic'))
     total_label.pack(anchor=tk.W, pady=(0, 15))
-
 
     ttk.Label(frame_achats, text="Articles disponibles :", style='Header.TLabel').pack(anchor=tk.W)
 
@@ -199,7 +209,7 @@ def main():
     entry_new_user = ttk.Entry(frame_creation, width=30)
     entry_new_user.pack(anchor=tk.W, pady=5)
 
-    ttk.Label(frame_creation, text="Dépot:").pack(anchor=tk.W)
+    ttk.Label(frame_creation, text="Dépôt:").pack(anchor=tk.W)
     entry_solde = ttk.Entry(frame_creation, width=30)
     entry_solde.pack(anchor=tk.W, pady=5)
 
