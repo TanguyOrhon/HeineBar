@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
-from users_db import init_user_db, add_user, get_users, add_purchase, get_user_purchases
-from users_db import get_total_spent_by_user
+from users_db import *
 
 JSON_FILE = 'articles.json'
 
@@ -107,18 +106,28 @@ def main():
     def select_user(uid):
         selected_user_id.set(uid)
         username = user_options.get(uid, 'N/A')
-        total = get_total_spent_by_user(uid)
+        total = get_user_balance(uid)
         user_label.config(text=f"Utilisateur sélectionné : {username}")
-        total_label.config(text=f"Total dépensé : {total:.2f} €")
+        total_label.config(text=f"Solde : {total:.2f} €")
 
 
     def create_user():
         name = entry_new_user.get().strip()
+        balance = entry_solde.get().strip()
         if not name:
             messagebox.showerror("Erreur", "Nom requis.")
             return
-        if add_user(name):
+        if not balance:
+            messagebox.showerror("Erreur", "Solde requis.")
+            return
+        try:
+            balance = float(balance)
+        except ValueError:
+            messagebox.showerror("Erreur", "Le solde doit être un nombre.")
+            return
+        if add_user(name, balance):
             entry_new_user.delete(0, tk.END)
+            entry_solde.delete(0, tk.END)
             refresh_users()
             messagebox.showinfo("Succès", f"Utilisateur '{name}' ajouté.")
         else:
@@ -147,7 +156,7 @@ def main():
 
     user_menu = ttk.OptionMenu(frame_achats, selected_user_id, None)
     user_menu.pack(anchor=tk.W, pady=(0,15))
-    total_label = ttk.Label(frame_achats, text="Total dépensé : 0.00 €", font=('Segoe UI', 11, 'italic'))
+    total_label = ttk.Label(frame_achats, text="Solde : 0.00 €", font=('Segoe UI', 11, 'italic'))
     total_label.pack(anchor=tk.W, pady=(0, 15))
 
 
@@ -186,8 +195,13 @@ def main():
 
     ttk.Label(frame_creation, text="Ajouter un utilisateur", style='Header.TLabel').pack(anchor=tk.W, pady=(0,10))
 
+    ttk.Label(frame_creation, text="Nom de l'utilisateur:").pack(anchor=tk.W)
     entry_new_user = ttk.Entry(frame_creation, width=30)
     entry_new_user.pack(anchor=tk.W, pady=5)
+
+    ttk.Label(frame_creation, text="Dépot:").pack(anchor=tk.W)
+    entry_solde = ttk.Entry(frame_creation, width=30)
+    entry_solde.pack(anchor=tk.W, pady=5)
 
     btn_create_user = ttk.Button(frame_creation, text="Créer utilisateur", command=create_user)
     btn_create_user.pack(anchor=tk.W, pady=10)
