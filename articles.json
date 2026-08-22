@@ -1,6 +1,14 @@
 [
     {
-        "name": "Biere",
-        "price": 3.0
+        "name": "Biere 50cl",
+        "price": 4.0
+    },
+    {
+        "name": "Biere 25cl",
+        "price": 2
+    },
+    {
+        "name": "Jus de pomme",
+        "price": 1.5
     }
 ]
