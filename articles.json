@@ -10,5 +10,33 @@
     {
         "name": "Jus de pomme",
         "price": 1.5
+    },
+    {
+        "name": "IPA Blanche",
+        "price": 5.0
+    },
+    {
+        "name": "PONCH 50CL",
+        "price": 6.0
+    },
+    {
+        "name": "PONCH 25CL",
+        "price": 3.0
+    },
+    {
+        "name": "IPA  BLANCHE 25CL",
+        "price": 2.5
+    },
+    {
+        "name": "CONSIGNE",
+        "price": 1.0
+    },
+    {
+        "name": "JUS DE POMME 50 CL",
+        "price": 3.0
+    },
+    {
+        "name": "ENTREE",
+        "price": 5.0
     }
 ]
