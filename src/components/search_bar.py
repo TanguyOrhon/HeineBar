@@ -43,8 +43,13 @@ class UserSearchBar(ttk.Frame):
         self.after(200, self.check_focus_out)
 
     def check_focus_out(self):
-        if self.focus_get() != self.listbox and self.focus_get() != self.entry:
-            self.listbox.pack_forget()
+        try:
+            focus = self.focus_get()
+            if focus != self.listbox and focus != self.entry:
+                self.listbox.pack_forget()
+        except KeyError:
+            # Handle cases where focus_get() returns a widget that is being destroyed
+            pass
 
     def on_selected(self, event=None):
         selection = self.listbox.curselection()

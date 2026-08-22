@@ -2,9 +2,13 @@ import tkinter as tk
 from src.ui.ui import HeineBarUI
 from src.logic import logic
 from src.db import users_db
+from src.logic.auto_sync import start_sync_thread
 
 def main():
     users_db.init_user_db()
+    
+    # Start auto-sync in the background
+    start_sync_thread()
     
     root = tk.Tk()
     
